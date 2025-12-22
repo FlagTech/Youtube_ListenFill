@@ -133,68 +133,69 @@ export default function AIExplanationCard() {
       </div>
 
       {/* 解說內容 */}
-      {displayExplanation ? (
+      {displayExplanation && (
         <div className="mb-4 max-h-96 overflow-y-auto">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-                {/* 將換行符轉換為段落 */}
-                {displayExplanation.split('\n').map((paragraph, index) => {
-                // 處理標題（以 # 開頭）
-                if (paragraph.startsWith('## ')) {
-                  return (
-                    <h3 key={index} className="text-xl font-bold text-blue-700 dark:text-blue-300 mt-6 mb-3">
-                      {paragraph.replace('## ', '')}
-                    </h3>
-                  );
-                }
-                if (paragraph.startsWith('# ')) {
-                  return (
-                    <h2 key={index} className="text-2xl font-bold text-purple-700 dark:text-purple-300 mt-6 mb-4">
-                      {paragraph.replace('# ', '')}
-                    </h2>
-                  );
-                }
-
-                // 處理列表項（以 - 或 * 或數字開頭）
-                if (paragraph.match(/^[\-\*]\s+/)) {
-                  return (
-                    <li key={index} className="text-gray-800 dark:text-gray-200 ml-4 mb-2">
-                      {paragraph.replace(/^[\-\*]\s+/, '')}
-                    </li>
-                  );
-                }
-                if (paragraph.match(/^\d+\.\s+/)) {
-                  return (
-                    <li key={index} className="text-gray-800 dark:text-gray-200 ml-4 mb-2 list-decimal">
-                      {paragraph.replace(/^\d+\.\s+/, '')}
-                    </li>
-                  );
-                }
-
-                // 處理粗體文字（**text** 或 __text__）
-                const boldText = paragraph.replace(
-                  /\*\*(.*?)\*\*/g,
-                  '<strong class="text-amber-700 dark:text-yellow-300 font-bold">$1</strong>'
-                ).replace(
-                  /__(.*?)__/g,
-                  '<strong class="text-amber-700 dark:text-yellow-300 font-bold">$1</strong>'
-                );
-
-                // 空行
-                if (paragraph.trim() === '') {
-                  return <br key={index} />;
-                }
-
-                // 一般段落
+            {/* 將換行符轉換為段落 */}
+            {displayExplanation.split('\n').map((paragraph, index) => {
+              // 處理標題（以 # 開頭）
+              if (paragraph.startsWith('## ')) {
                 return (
-                  <p
-                    key={index}
-                    className="text-gray-800 dark:text-gray-200 mb-4 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: boldText }}
-                  />
+                  <h3 key={index} className="text-xl font-bold text-blue-700 dark:text-blue-300 mt-6 mb-3">
+                    {paragraph.replace('## ', '')}
+                  </h3>
                 );
-              })}
+              }
+              if (paragraph.startsWith('# ')) {
+                return (
+                  <h2 key={index} className="text-2xl font-bold text-purple-700 dark:text-purple-300 mt-6 mb-4">
+                    {paragraph.replace('# ', '')}
+                  </h2>
+                );
+              }
+
+              // 處理列表項（以 - 或 * 或數字開頭）
+              if (paragraph.match(/^[\-\*]\s+/)) {
+                return (
+                  <li key={index} className="text-gray-800 dark:text-gray-200 ml-4 mb-2">
+                    {paragraph.replace(/^[\-\*]\s+/, '')}
+                  </li>
+                );
+              }
+              if (paragraph.match(/^\d+\.\s+/)) {
+                return (
+                  <li key={index} className="text-gray-800 dark:text-gray-200 ml-4 mb-2 list-decimal">
+                  {paragraph.replace(/^\d+\.\s+/, '')}
+                </li>
+              );
+            }
+
+            // 處理粗體文字（**text** 或 __text__）
+            const boldText = paragraph.replace(
+              /\*\*(.*?)\*\*/g,
+              '<strong class="text-amber-700 dark:text-yellow-300 font-bold">$1</strong>'
+            ).replace(
+              /__(.*?)__/g,
+              '<strong class="text-amber-700 dark:text-yellow-300 font-bold">$1</strong>'
+            );
+
+            // 空行
+            if (paragraph.trim() === '') {
+              return <br key={index} />;
+            }
+
+            // 一般段落
+            return (
+              <p
+                key={index}
+                className="text-gray-800 dark:text-gray-200 mb-4 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: boldText }}
+              />
+            );
+          })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 底部按鈕 */}
       <div className="flex gap-2">
