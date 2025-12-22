@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* 毛玻璃卡片 */
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-gray-900/70;
+    @apply border border-white/30 dark:border-white/10;
+    @apply rounded-2xl shadow-card;
+  }
+
+  .glass-card:hover {
+    @apply shadow-card-hover;
+  }
+
+  /* 毛玻璃按鈕 */
+  .btn-glass {
+    @apply px-6 py-3 rounded-xl font-semibold;
+    @apply bg-white/20 hover:bg-white/30;
+    @apply border border-white/30;
+    @apply transition-all duration-300;
+    @apply hover:scale-105 hover:shadow-lg;
+  }
+
+  /* 漸變按鈕 */
+  .btn-gradient {
+    @apply px-6 py-3 rounded-xl font-semibold text-white;
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600;
+    @apply hover:from-blue-700 hover:to-indigo-700;
+    @apply transition-all duration-300;
+    @apply hover:scale-105 hover:shadow-glow;
+  }
+
+  /* 浮動氣泡 */
+  .float-bubble {
+    @apply absolute rounded-full blur-3xl animate-float;
+    opacity: 0.3;
+  }
+}
+
+/* 自訂樣式 */
+.input-box {
+  width: 1.4ch;
+  @apply h-8 text-center border-0 border-b-2 border-gray-400 bg-transparent text-lg font-medium;
+  @apply focus:border-blue-500 focus:outline-none;
+  @apply transition-all duration-200;
+}
+
+.input-box.correct {
+  @apply border-green-500 text-green-700;
+}
+
+.input-box.incorrect {
+  @apply border-red-500 text-red-700;
+}
+
+.segment-item {
+  @apply px-4 py-2 rounded-lg cursor-pointer transition-all duration-200;
+  @apply hover:bg-gray-100;
+}
+
+.segment-item.active {
+  @apply bg-blue-100 border-l-4 border-blue-500;
+}
+
+.segment-item.completed {
+  @apply bg-green-50;
+}
+
+.btn-primary {
+  @apply px-4 py-2 bg-blue-600 text-white rounded-lg font-medium;
+  @apply hover:bg-blue-700 active:bg-blue-800;
+  @apply transition-colors duration-200;
+  @apply disabled:bg-gray-300 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium;
+  @apply hover:bg-gray-300 active:bg-gray-400;
+  @apply transition-colors duration-200;
+}
+
+.speed-btn {
+  @apply px-3 py-1 rounded-md text-sm font-medium;
+  @apply border-2 border-gray-300 bg-white;
+  @apply hover:bg-gray-50 transition-all duration-200;
+}
+
+.speed-btn.active {
+  @apply border-blue-500 bg-blue-50 text-blue-700;
+}
+
+/* 響應式優化 */
+@media (max-width: 1024px) {
+  .input-box {
+    width: 1.3ch;
+    @apply h-7 text-base;
+  }
+}
+
+@media (max-width: 640px) {
+  .input-box {
+    width: 1.2ch;
+    @apply h-6 text-sm;
+  }
+}
+
+/* 滾動條樣式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-lg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-lg;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* 動畫 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* 文字截斷 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+

@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# uv
+.uv/
+
+# Database
+*.db
+*.db.backup
+*.sqlite
+*.sqlite3
+
+# Downloads
+backend/downloads/videos/*
+backend/downloads/subtitles/*
+!backend/downloads/videos/.gitkeep
+!backend/downloads/subtitles/.gitkeep
+
+# Test files
+test/original/*
+test/processed/*
+!test/.gitkeep
+!test/README.md
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Frontend build
+frontend/dist/
+frontend/build/
+.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.cursor/
+.claude/
+
+# Project documentation
+CLAUDE.md
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
