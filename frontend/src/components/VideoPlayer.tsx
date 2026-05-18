@@ -20,6 +20,7 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
     playMode,
     playbackSpeed,
     isPlaying,
+    seekTrigger,
     setIsPlaying,
     nextSegment,
     prevSegment,
@@ -33,6 +34,16 @@ export default function VideoPlayer({ videoUrl }: VideoPlayerProps) {
       playerRef.current.seekTo(currentSegment.start_time, 'seconds');
     }
   }, [currentSegmentIndex, currentSegment]);
+
+  // 點擊循環/單次按鈕時強制 seek 到當前分段並開始播放
+  useEffect(() => {
+    if (seekTrigger === 0) return;
+    if (loopTimeoutRef.current) clearTimeout(loopTimeoutRef.current);
+    if (currentSegment && playerRef.current) {
+      playerRef.current.seekTo(currentSegment.start_time, 'seconds');
+      setIsPlaying(true);
+    }
+  }, [seekTrigger]);
   
   // 處理播放進度
   const handleProgress = (state: { playedSeconds: number }) => {

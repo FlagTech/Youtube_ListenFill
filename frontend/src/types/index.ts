@@ -43,8 +43,6 @@ export interface LetterElement {
 export interface Progress {
   videoId: string;
   lastSegmentIndex: number;
-  completedSegments: number[];
-  segmentScores: Record<number, number>;
 }
 
 export type PlayMode = 'loop' | 'once';

@@ -108,14 +108,20 @@ export default function PracticePage() {
       <Sidebar />
 
       {/* 主要內容區 */}
-      <main className="pt-20 md:pt-24 px-4 md:px-6 pb-8">
+      <main className="px-4 md:px-6 pb-8">
         <div className="max-w-7xl mx-auto">
           {/* 影片標題 */}
-          <div className="mb-6 animate-fade-in-up">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {currentVideo.title}
+          <div className="pt-4 mb-6 animate-fade-in-up">
+            <h1 className="text-2xl md:text-3xl font-bold">
+              <a
+                href={`https://www.youtube.com/watch?v=${currentVideo.youtube_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+              >
+                {currentVideo.title}
+              </a>
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">{currentVideo.channel}</p>
           </div>
 
           {/* 上半部：影片播放器 + 控制面板 */}

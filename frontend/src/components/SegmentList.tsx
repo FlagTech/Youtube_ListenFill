@@ -15,7 +15,11 @@ export default function SegmentList() {
   
   const isSegmentCompleted = (index: number): boolean => {
     const inputs = userInputs[index];
-    return inputs && inputs.length > 0 && inputs.every(input => input.trim() !== '');
+    if (!inputs || inputs.length === 0) return false;
+    const expectedCount = (segments[index]?.letter_template.match(/_/g) ?? []).length;
+    if (expectedCount === 0) return false;
+    const filledCount = inputs.filter(v => v && v.trim() !== '').length;
+    return filledCount >= expectedCount;
   };
   
   return (

@@ -1,5 +1,20 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Youtube, Home, Settings } from 'lucide-react';
+import { Home, Settings } from 'lucide-react';
+
+function PlayLogo({ size = 32 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="1" y="1" width="30" height="30" rx="7" fill="#DC2626" />
+      <polygon points="12,9 12,23 24,16" fill="white" />
+    </svg>
+  );
+}
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -7,7 +22,7 @@ export default function NavBar() {
   const isHome = location.pathname === '/';
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50">
+    <nav className="relative z-10">
       <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/80 border-b border-white/30 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3">
           <div className="flex items-center gap-4">
@@ -16,7 +31,9 @@ export default function NavBar() {
               onClick={() => navigate('/')}
               className="flex items-center gap-2 group"
             >
-              <Youtube size={32} className="text-red-600 group-hover:scale-110 transition-transform" />
+              <span className="group-hover:scale-110 transition-transform inline-flex">
+                <PlayLogo size={32} />
+              </span>
               <span className="text-lg md:text-xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 YouTube 聽打練習
               </span>

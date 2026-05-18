@@ -8,6 +8,27 @@ import NavBar from '../components/NavBar';
 import { aiApi } from '../services/api';
 import type { AIProvider, AISettings, AISettingsUpdate } from '../types';
 
+const LS_KEY = 'yt_listenfill_ai_settings';
+
+function loadLocalSettings(): Record<string, string> | null {
+  try {
+    const s = localStorage.getItem(LS_KEY);
+    return s ? JSON.parse(s) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveLocalSettings(updates: Record<string, string>) {
+  const existing = loadLocalSettings() ?? {};
+  localStorage.setItem(LS_KEY, JSON.stringify({ ...existing, ...updates }));
+}
+
+function maskKey(key: string): string {
+  if (key.length <= 10) return '***';
+  return key.slice(0, 6) + '****' + key.slice(-4);
+}
+
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -36,7 +57,26 @@ export default function SettingsPage() {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const settings = await aiApi.getSettings();
+        let settings = await aiApi.getSettings();
+
+        // 後端沒有 Key 時，嘗試從 localStorage 還原
+        if (!settings.openai_api_key_masked && !settings.gemini_api_key_masked) {
+          const local = loadLocalSettings();
+          if (local?.openai_api_key || local?.gemini_api_key) {
+            const syncPayload: AISettingsUpdate = {
+              provider: (local.provider as AIProvider) || settings.provider,
+              openai_model: local.openai_model || settings.openai_model,
+              gemini_model: local.gemini_model || settings.gemini_model,
+              ollama_base_url: local.ollama_base_url || settings.ollama_base_url,
+              ollama_model: local.ollama_model || settings.ollama_model,
+            };
+            if (local.openai_api_key) syncPayload.openai_api_key = local.openai_api_key;
+            if (local.gemini_api_key) syncPayload.gemini_api_key = local.gemini_api_key;
+            await aiApi.updateSettings(syncPayload);
+            settings = await aiApi.getSettings();
+          }
+        }
+
         setProvider(settings.provider);
         setOpenaiModel(settings.openai_model);
         setGeminiModel(settings.gemini_model);
@@ -45,12 +85,23 @@ export default function SettingsPage() {
         setOpenaiKeyMasked(settings.openai_api_key_masked || null);
         setGeminiKeyMasked(settings.gemini_api_key_masked || null);
       } catch (error) {
+        // 後端無法連線時，退而使用 localStorage 顯示
+        const local = loadLocalSettings();
+        if (local) {
+          setProvider((local.provider as AIProvider) || 'gemini');
+          setOpenaiModel(local.openai_model || 'gpt-4o-mini');
+          setGeminiModel(local.gemini_model || 'gemini-1.5-flash');
+          setOllamaBaseUrl(local.ollama_base_url || 'http://localhost:11434');
+          setOllamaModel(local.ollama_model || 'llama3.1:8b');
+          if (local.openai_api_key) setOpenaiKeyMasked(maskKey(local.openai_api_key));
+          if (local.gemini_api_key) setGeminiKeyMasked(maskKey(local.gemini_api_key));
+        }
         console.error('載入設定失敗:', error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadSettings();
   }, []);
 
@@ -74,11 +125,23 @@ export default function SettingsPage() {
       
       await aiApi.updateSettings(settings);
       
+      // 同步寫入 localStorage（僅在使用者輸入了新 Key 時才更新）
+      const localUpdate: Record<string, string> = {
+        provider,
+        openai_model: openaiModel,
+        gemini_model: geminiModel,
+        ollama_base_url: ollamaBaseUrl,
+        ollama_model: ollamaModel,
+      };
+      if (openaiApiKey) localUpdate.openai_api_key = openaiApiKey;
+      if (geminiApiKey) localUpdate.gemini_api_key = geminiApiKey;
+      saveLocalSettings(localUpdate);
+
       // 重新載入設定以更新遮罩後的 Key
       const updatedSettings = await aiApi.getSettings();
       setOpenaiKeyMasked(updatedSettings.openai_api_key_masked || null);
       setGeminiKeyMasked(updatedSettings.gemini_api_key_masked || null);
-      
+
       // 清空輸入框
       setOpenaiApiKey('');
       setGeminiApiKey('');
@@ -154,7 +217,7 @@ export default function SettingsPage() {
     <div className="min-h-screen">
       <NavBar />
       
-      <main className="pt-20 md:pt-24 px-4 md:px-6 pb-8">
+      <main className="px-4 md:px-6 pb-8">
         <div className="max-w-4xl mx-auto">
           {/* 標題列 */}
           <div className="mb-8 flex items-center gap-4 animate-fade-in-up">

@@ -56,7 +56,13 @@ const VideoHistoryList = ({ videos, onVideoClick }: VideoHistoryListProps) => {
         <button
           key={video.id}
           onClick={() => onVideoClick(video)}
-          className="w-full p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left group"
+          draggable
+          onDragStart={(e) => {
+            e.dataTransfer.setData('videoId', video.id.toString());
+            e.dataTransfer.effectAllowed = 'move';
+            e.stopPropagation();
+          }}
+          className="w-full p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left group cursor-move"
         >
           {/* 縮圖區 */}
           <div className="relative mb-2 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">

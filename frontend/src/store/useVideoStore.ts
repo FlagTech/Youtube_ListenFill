@@ -17,11 +17,13 @@ interface VideoStore {
   playMode: PlayMode;
   playbackSpeed: number;
   isPlaying: boolean;
+  seekTrigger: number; // 每次遞增觸發 VideoPlayer seek 到當前分段
   
   // 填空狀態
   userInputs: Record<number, string[]>; // segmentIndex -> 字母陣列
   showAnswer: boolean;
   showTranslation: boolean;
+  pendingFocusIndex: number | null; // hint 後需要聚焦的 inputIndex
   
   // 分類資料夾
   folders: Folder[];
@@ -50,20 +52,20 @@ interface VideoStore {
   
   // Actions - 播放控制
   togglePlayMode: () => void;
+  setPlayMode: (mode: PlayMode) => void;
   setPlaybackSpeed: (speed: number) => void;
   setIsPlaying: (playing: boolean) => void;
+  triggerSeek: () => void;
   
   // Actions - 填空練習
   updateUserInput: (segmentIndex: number, letterIndex: number, value: string) => void;
-  setUserInputs: (segmentIndex: number, inputs: string[]) => void;
-  clearUserInputs: (segmentIndex: number) => void;
   toggleShowAnswer: () => void;
   toggleShowTranslation: () => void;
-  
+  setPendingFocusIndex: (index: number | null) => void;
+
   // Actions - 進度管理
   saveProgress: () => void;
   loadProgress: (videoId: string) => void;
-  getProgress: (videoId: string) => Progress | null;
   
   // Actions - 分類管理
   setFolders: (folders: Folder[]) => void;
@@ -91,9 +93,11 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   playMode: 'loop',
   playbackSpeed: 1,
   isPlaying: false,
+  seekTrigger: 0,
   userInputs: {},
   showAnswer: false,
   showTranslation: false,
+  pendingFocusIndex: null,
   folders: [],
   selectedFolderId: null,
   sidebarOpen: false,
@@ -169,10 +173,14 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   togglePlayMode: () => set((state) => ({
     playMode: state.playMode === 'loop' ? 'once' : 'loop'
   })),
-  
+
+  setPlayMode: (mode) => set({ playMode: mode }),
+
   setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
-  
+
   setIsPlaying: (playing) => set({ isPlaying: playing }),
+
+  triggerSeek: () => set((state) => ({ seekTrigger: state.seekTrigger + 1 })),
   
   // 填空練習
   updateUserInput: (segmentIndex, letterIndex, value) => {
@@ -189,83 +197,42 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
     });
   },
   
-  setUserInputs: (segmentIndex, inputs) => {
-    const { userInputs } = get();
-    set({
-      userInputs: {
-        ...userInputs,
-        [segmentIndex]: inputs
-      }
-    });
-  },
-  
-  clearUserInputs: (segmentIndex) => {
-    const { userInputs } = get();
-    const newInputs = { ...userInputs };
-    delete newInputs[segmentIndex];
-    set({ userInputs: newInputs });
-  },
-  
   toggleShowAnswer: () => set((state) => ({
     showAnswer: !state.showAnswer
   })),
-  
+
   toggleShowTranslation: () => set((state) => ({
     showTranslation: !state.showTranslation
   })),
+
+  setPendingFocusIndex: (index) => set({ pendingFocusIndex: index }),
   
   // 進度管理
   saveProgress: () => {
-    const { currentVideo, currentSegmentIndex, userInputs } = get();
+    const { currentVideo, currentSegmentIndex } = get();
     if (!currentVideo) return;
-    
+
     const progress: Progress = {
       videoId: currentVideo.youtube_id,
       lastSegmentIndex: currentSegmentIndex,
-      completedSegments: [],
-      segmentScores: {},
     };
-    
-    // 計算每段的完成狀態和正確率
-    Object.keys(userInputs).forEach((key) => {
-      const segIndex = parseInt(key);
-      const inputs = userInputs[segIndex];
-      if (inputs && inputs.length > 0) {
-        // 這裡可以計算正確率
-        progress.completedSegments.push(segIndex);
-      }
-    });
-    
+
     localStorage.setItem(
       `progress_${currentVideo.youtube_id}`,
       JSON.stringify(progress)
     );
   },
-  
+
   loadProgress: (videoId) => {
     const saved = localStorage.getItem(`progress_${videoId}`);
     if (saved) {
       try {
         const progress: Progress = JSON.parse(saved);
-        set({
-          currentSegmentIndex: progress.lastSegmentIndex || 0,
-        });
+        set({ currentSegmentIndex: progress.lastSegmentIndex || 0 });
       } catch (e) {
         console.error('載入進度失敗:', e);
       }
     }
-  },
-  
-  getProgress: (videoId) => {
-    const saved = localStorage.getItem(`progress_${videoId}`);
-    if (saved) {
-      try {
-        return JSON.parse(saved) as Progress;
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
   },
   
   // 分類管理

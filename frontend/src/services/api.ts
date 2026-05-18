@@ -239,5 +239,3 @@ export const subtitleApi = {
   },
 };
 
-export default api;
-

@@ -10,6 +10,7 @@ from datetime import datetime
 import os
 import json
 import asyncio
+import queue
 
 from app.models.database import get_db, Video, SubtitleSegment, Folder, AISettings
 from app.services.youtube_service import youtube_service
@@ -132,11 +133,35 @@ async def download_video_stream(request: VideoDownloadRequest, db: Session = Dep
             yield f"data: {json.dumps({'stage': 'download', 'progress': 60, 'message': '影片下載完成'})}\n\n"
             await asyncio.sleep(0.1)
 
-            # 3. 處理字幕
-            yield f"data: {json.dumps({'stage': 'subtitle', 'progress': 70, 'message': '正在解析並翻譯字幕...'})}\n\n"
+            # 3. 處理字幕（在 thread pool 中執行，避免阻塞 event loop）
+            yield f"data: {json.dumps({'stage': 'subtitle', 'progress': 70, 'message': '正在解析字幕...'})}\n\n"
             await asyncio.sleep(0.1)
 
-            segments = subtitle_service.parse_and_translate(download_result['subtitle_path'])
+            progress_q: queue.SimpleQueue = queue.SimpleQueue()
+
+            def on_subtitle_progress(current: int, total: int) -> None:
+                progress_q.put((current, total))
+
+            task = asyncio.create_task(
+                asyncio.to_thread(
+                    subtitle_service.parse_and_translate,
+                    download_result['subtitle_path'],
+                    on_subtitle_progress,
+                )
+            )
+
+            # 翻譯期間持續回報進度
+            while not task.done():
+                await asyncio.sleep(0.2)
+                latest = None
+                while not progress_q.empty():
+                    latest = progress_q.get_nowait()
+                if latest:
+                    current, total = latest
+                    pct = 70 + int((current / total) * 15)  # 70% → 85%
+                    yield f"data: {json.dumps({'stage': 'subtitle', 'progress': pct, 'message': f'翻譯字幕中... {current}/{total} 段'})}\n\n"
+
+            segments = task.result()  # 若 thread 拋出例外會在此重新拋出
 
             yield f"data: {json.dumps({'stage': 'subtitle', 'progress': 85, 'message': f'字幕處理完成，共 {len(segments)} 段'})}\n\n"
             await asyncio.sleep(0.1)
@@ -236,9 +261,12 @@ async def download_video(request: VideoDownloadRequest, db: Session = Depends(ge
         download_result = youtube_service.download_video(request.url, youtube_id)
         print(f"[DEBUG] 下載完成: {download_result}")
 
-        # 解析並翻譯字幕
+        # 解析並翻譯字幕（在 thread pool 中執行）
         print("[DEBUG] 正在解析並翻譯字幕...")
-        segments = subtitle_service.parse_and_translate(download_result['subtitle_path'])
+        segments = await asyncio.to_thread(
+            subtitle_service.parse_and_translate,
+            download_result['subtitle_path'],
+        )
         print(f"[DEBUG] 解析完成，共 {len(segments)} 段字幕")
 
         # 儲存到資料庫
