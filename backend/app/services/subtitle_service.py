@@ -4,7 +4,7 @@
 import re
 import pysrt
 from deep_translator import GoogleTranslator
-from typing import List, Dict
+from typing import Callable, List, Dict, Optional
 import time
 
 
@@ -208,37 +208,42 @@ class SubtitleService:
         
         return segments
     
-    def translate_segments(self, segments: List[Dict], batch_size: int = 10) -> List[Dict]:
+    def translate_segments(
+        self,
+        segments: List[Dict],
+        on_progress: Optional[Callable[[int, int], None]] = None,
+    ) -> List[Dict]:
         """
-        批次翻譯字幕分段
-        
+        翻譯字幕分段
+
         Args:
             segments: 字幕分段列表
-            batch_size: 批次大小
-            
+            on_progress: 進度回呼 on_progress(current, total)，每段完成後呼叫
+
         Returns:
             包含翻譯的字幕分段列表
         """
-        for i in range(0, len(segments), batch_size):
-            batch = segments[i:i + batch_size]
-            
-            for segment in batch:
-                try:
-                    # 翻譯英文到繁體中文
-                    translated = self.translator.translate(segment['text_en'])
-                    segment['text_zh'] = translated
-                    
-                    # 生成字母模板
-                    segment['letter_template'] = self.generate_letter_template(segment['text_en'])
-                    
-                    # 避免 API 限流
-                    time.sleep(0.1)
-                    
-                except Exception as e:
-                    print(f"翻譯錯誤 (段落 {segment['index']}): {str(e)}")
-                    segment['text_zh'] = segment['text_en']  # 翻譯失敗時使用原文
-                    segment['letter_template'] = self.generate_letter_template(segment['text_en'])
-        
+        total = len(segments)
+        failed = 0
+
+        for i, segment in enumerate(segments):
+            try:
+                translated = self.translator.translate(segment['text_en'])
+                segment['text_zh'] = translated
+                time.sleep(0.1)
+            except Exception as e:
+                print(f"翻譯錯誤 (段落 {segment['index']}): {str(e)}")
+                segment['text_zh'] = segment['text_en']
+                failed += 1
+            finally:
+                segment['letter_template'] = self.generate_letter_template(segment['text_en'])
+
+            if on_progress:
+                on_progress(i + 1, total)
+
+        if failed > 0:
+            print(f"[WARN] {failed}/{total} 段翻譯失敗，已以英文原文替代")
+
         return segments
     
     def generate_letter_template(self, text: str) -> str:
@@ -300,35 +305,34 @@ class SubtitleService:
         
         return text
     
-    def parse_and_translate(self, file_path: str) -> List[Dict]:
+    def parse_and_translate(
+        self,
+        file_path: str,
+        on_progress: Optional[Callable[[int, int], None]] = None,
+    ) -> List[Dict]:
         """
         解析並翻譯字幕檔案（一站式處理）
-        
+
         支援 VTT 格式（逐字時間戳記，精確時間軸）
-        
+
         Args:
             file_path: 字幕檔案路徑（VTT 或 SRT）
-            
+            on_progress: 進度回呼，傳遞給 translate_segments
+
         Returns:
             包含翻譯和字母模板的字幕分段列表
         """
-        # 判斷檔案格式
         if file_path.endswith('.vtt'):
-            # 使用 VTT 逐字時間戳記解析
             print("[INFO] 使用 VTT 逐字時間戳記解析...")
             words = self.parse_vtt_word_timing(file_path)
             print(f"[INFO] 提取了 {len(words)} 個詞")
-            
-            # 合併成完整句子（使用精確時間軸）
             segments = self.merge_words_into_sentences(words)
             print(f"[INFO] 合併成 {len(segments)} 個完整句子")
         else:
-            # 舊的 SRT 解析邏輯（保留兼容性）
             print("[INFO] 使用 SRT 解析...")
             segments = self.parse_srt(file_path)
-        
-        # 翻譯
-        segments = self.translate_segments(segments)
+
+        segments = self.translate_segments(segments, on_progress)
         return segments
 
 

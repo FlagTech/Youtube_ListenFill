@@ -17,6 +17,7 @@ export default function ActionButtons() {
     showTranslation,
     isLoadingExplanation,
     updateUserInput,
+    setPendingFocusIndex,
     toggleShowAnswer,
     toggleShowTranslation,
     setAIExplanation,
@@ -41,19 +42,11 @@ export default function ActionButtons() {
     for (let i = 0; i < correctAnswers.length; i++) {
       const userInput = currentInputs[i] || '';
       const correctAnswer = correctAnswers[i];
-      
-      // 找到第一個空白或錯誤的位置
+
       if (!userInput || userInput.toLowerCase() !== correctAnswer.toLowerCase()) {
         updateUserInput(currentSegmentIndex, i, correctAnswer);
-        
-        // 聚焦到下一個輸入框
-        setTimeout(() => {
-          const nextInput = document.querySelectorAll('.input-box')[i + 1] as HTMLInputElement;
-          if (nextInput) {
-            nextInput.focus();
-          }
-        }, 100);
-        
+        // 透過 store 通知 FillBlanksInput 在 render 完成後聚焦 i+1
+        setPendingFocusIndex(i + 1);
         break;
       }
     }
@@ -124,19 +117,6 @@ export default function ActionButtons() {
       </button>
 
       <button
-        onClick={handleCheckAnswer}
-        className={`w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors duration-200 ${
-          showAnswer
-            ? 'bg-emerald-500 text-white hover:bg-emerald-600 active:bg-emerald-700'
-            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 active:bg-emerald-300'
-        }`}
-        title="檢查答案正確性"
-      >
-        <CheckCircle size={20} />
-        <span>{showAnswer ? '隱藏答案' : '檢查答案'}</span>
-      </button>
-
-      <button
         onClick={handleToggleTranslation}
         className={`w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors duration-200 ${
           showTranslation
@@ -147,6 +127,19 @@ export default function ActionButtons() {
       >
         <Languages size={20} />
         <span>{showTranslation ? '隱藏翻譯' : '顯示翻譯'}</span>
+      </button>
+
+      <button
+        onClick={handleCheckAnswer}
+        className={`w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors duration-200 ${
+          showAnswer
+            ? 'bg-emerald-500 text-white hover:bg-emerald-600 active:bg-emerald-700'
+            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 active:bg-emerald-300'
+        }`}
+        title="檢查答案正確性"
+      >
+        <CheckCircle size={20} />
+        <span>{showAnswer ? '隱藏答案' : '檢查答案'}</span>
       </button>
 
       <button

@@ -104,18 +104,8 @@ export default function HomePage() {
       <Sidebar />
 
       {/* 主要內容 */}
-      <main className="pt-20 md:pt-24 px-4 md:px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Hero 標題 */}
-          <div className="text-center mb-12 animate-fade-in-up">
-            <h1 className="text-4xl md:text-6xl font-black mb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              YouTube 聽打練習
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300">
-              透過 YouTube 影片提升英語聽力與拼寫能力
-            </p>
-          </div>
-
+      <main className="px-4 md:px-6">
+        <div className="max-w-7xl mx-auto pt-6">
           {/* 下載區域 */}
           <div className="glass-card p-6 md:p-8 mb-12 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
             <div className="flex items-center gap-3 mb-6">
@@ -183,7 +173,12 @@ export default function HomePage() {
                 {videos.map((video, index) => (
                   <div
                     key={video.id}
-                    className="glass-card overflow-hidden hover:scale-105 transition-all duration-300 group animate-fade-in-up"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('videoId', video.id.toString());
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    className="glass-card overflow-hidden hover:scale-105 transition-all duration-300 group animate-fade-in-up cursor-move"
                     style={{animationDelay: `${0.1 * (index % 6)}s`}}
                   >
                     {/* 縮圖 */}

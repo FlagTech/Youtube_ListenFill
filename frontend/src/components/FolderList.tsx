@@ -5,22 +5,64 @@ import { useState } from 'react';
 import { Folder, FolderPlus, Inbox, Menu } from 'lucide-react';
 import { useVideoStore } from '../store/useVideoStore';
 import FolderManager from './FolderManager';
+import { videoApi } from '../services/api';
 
 const FolderList = () => {
-  const { 
-    folders, 
-    selectedFolderId, 
+  const {
+    folders,
+    selectedFolderId,
     setSelectedFolderId,
     videos,
+    setVideos,
+    setFolders,
   } = useVideoStore();
-  
+
   const [showManager, setShowManager] = useState(false);
+  const [dragOverFolderId, setDragOverFolderId] = useState<number | null>(null);
 
   // 計算未分類影片數量
   const uncategorizedCount = videos.filter(v => !v.folder_id).length;
-  
+
   // 計算全部影片數量
   const totalCount = videos.length;
+
+  // 處理拖放到資料夾
+  const handleDrop = async (e: React.DragEvent, targetFolderId: number | null) => {
+    e.preventDefault();
+    setDragOverFolderId(null);
+
+    const videoId = parseInt(e.dataTransfer.getData('videoId'));
+    if (!videoId) return;
+
+    try {
+      // 調用 API 移動影片
+      await videoApi.moveVideoToFolder(videoId, targetFolderId);
+
+      // 更新本地狀態
+      const updatedVideos = videos.map(v =>
+        v.id === videoId ? { ...v, folder_id: targetFolderId } : v
+      );
+      setVideos(updatedVideos);
+
+      // 重新載入資料夾以更新計數
+      const { folderApi } = await import('../services/api');
+      const updatedFolders = await folderApi.getFolders();
+      setFolders(updatedFolders);
+    } catch (error) {
+      console.error('移動影片失敗:', error);
+      alert('移動影片失敗，請稍後再試');
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, folderId: number | null) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverFolderId(folderId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverFolderId(null);
+  };
 
   return (
     <div className="p-3">
@@ -45,9 +87,14 @@ const FolderList = () => {
       {/* 未分類 */}
       <button
         onClick={() => setSelectedFolderId(0)}
+        onDragOver={(e) => handleDragOver(e, null)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, null)}
         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors mb-3 ${
           selectedFolderId === 0
             ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+            : dragOverFolderId === null
+            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 ring-2 ring-green-500'
             : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
         }`}
       >
@@ -94,9 +141,14 @@ const FolderList = () => {
             <button
               key={folder.id}
               onClick={() => setSelectedFolderId(folder.id)}
+              onDragOver={(e) => handleDragOver(e, folder.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, folder.id)}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
                 selectedFolderId === folder.id
                   ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                  : dragOverFolderId === folder.id
+                  ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 ring-2 ring-green-500'
                   : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
               }`}
             >

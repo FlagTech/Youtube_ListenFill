@@ -42,6 +42,7 @@
 /* 自訂樣式 */
 .input-box {
   width: 1.4ch;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   @apply h-8 text-center border-0 border-b-2 border-gray-400 bg-transparent text-lg font-medium;
   @apply focus:border-blue-500 focus:outline-none;
   @apply transition-all duration-200;

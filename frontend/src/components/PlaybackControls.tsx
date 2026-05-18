@@ -6,8 +6,14 @@ import { useVideoStore } from '../store/useVideoStore';
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export default function PlaybackControls() {
-  const { playMode, playbackSpeed, togglePlayMode, setPlaybackSpeed } = useVideoStore();
-  
+  const { playMode, playbackSpeed, setPlayMode, setPlaybackSpeed, triggerSeek, setIsPlaying } = useVideoStore();
+
+  const handleSelectMode = (mode: 'loop' | 'once') => {
+    setPlayMode(mode);
+    triggerSeek();
+    setIsPlaying(true);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 space-y-4">
       {/* 播放速度控制 */}
@@ -25,12 +31,12 @@ export default function PlaybackControls() {
           ))}
         </div>
       </div>
-      
+
       {/* 播放模式切換 */}
       <div>
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={togglePlayMode}
+            onClick={() => handleSelectMode('loop')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               playMode === 'loop'
                 ? 'bg-blue-600 text-white'
@@ -40,7 +46,7 @@ export default function PlaybackControls() {
             循環
           </button>
           <button
-            onClick={togglePlayMode}
+            onClick={() => handleSelectMode('once')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               playMode === 'once'
                 ? 'bg-blue-600 text-white'
