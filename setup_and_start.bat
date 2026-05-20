@@ -8,7 +8,7 @@ set "FRONTEND_URL=http://localhost:5173"
 set "BACKEND_PORT=8000"
 
 echo ====================================
-echo   YouTube ???? - Launcher
+echo   YouTube ListenFill - Launcher
 echo ====================================
 echo.
 echo [Info] Current directory: %CD%
@@ -112,14 +112,14 @@ echo.
 
 REM ---------- Launch backend ----------
 echo [START] Launching Backend...
-start "YouTube ???? - Backend" cmd /k "cd /d "%CD%\backend" && uv run python app.py"
+start "YouTube ListenFill - Backend" cmd /k "cd /d "%CD%\backend" && uv run python app.py"
 
 REM Wait for backend to start
 timeout /t 3 /nobreak >nul
 
 REM ---------- Launch frontend ----------
 echo [START] Launching Frontend (Vite)...
-start "YouTube ???? - Frontend" cmd /k "cd /d "%CD%\frontend" && npm run dev"
+start "YouTube ListenFill - Frontend" cmd /k "cd /d "%CD%\frontend" && npm run dev"
 
 REM Wait for frontend to start
 timeout /t 4 /nobreak >nul
