@@ -16,7 +16,9 @@ export default function SegmentList() {
   const isSegmentCompleted = (index: number): boolean => {
     const inputs = userInputs[index];
     if (!inputs || inputs.length === 0) return false;
-    const expectedCount = (segments[index]?.letter_template.match(/_/g) ?? []).length;
+    const template = segments[index]?.letter_template;
+    if (!template) return false;
+    const expectedCount = template.split('|').filter(c => /[a-zA-Z]/.test(c)).length;
     if (expectedCount === 0) return false;
     const filledCount = inputs.filter(v => v && v.trim() !== '').length;
     return filledCount >= expectedCount;

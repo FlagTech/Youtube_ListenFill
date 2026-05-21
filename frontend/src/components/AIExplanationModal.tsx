@@ -5,6 +5,8 @@ import { Save, X } from 'lucide-react';
 import { useVideoStore } from '../store/useVideoStore';
 import { subtitleApi } from '../services/api';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function AIExplanationCard() {
   const {
@@ -135,65 +137,32 @@ export default function AIExplanationCard() {
       {/* 解說內容 */}
       {displayExplanation && (
         <div className="mb-4 max-h-96 overflow-y-auto">
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            {/* 將換行符轉換為段落 */}
-            {displayExplanation.split('\n').map((paragraph, index) => {
-              // 處理標題（以 # 開頭）
-              if (paragraph.startsWith('## ')) {
-                return (
-                  <h3 key={index} className="text-xl font-bold text-blue-700 dark:text-blue-300 mt-6 mb-3">
-                    {paragraph.replace('## ', '')}
-                  </h3>
-                );
-              }
-              if (paragraph.startsWith('# ')) {
-                return (
-                  <h2 key={index} className="text-2xl font-bold text-purple-700 dark:text-purple-300 mt-6 mb-4">
-                    {paragraph.replace('# ', '')}
-                  </h2>
-                );
-              }
-
-              // 處理列表項（以 - 或 * 或數字開頭）
-              if (paragraph.match(/^[\-\*]\s+/)) {
-                return (
-                  <li key={index} className="text-gray-800 dark:text-gray-200 ml-4 mb-2">
-                    {paragraph.replace(/^[\-\*]\s+/, '')}
-                  </li>
-                );
-              }
-              if (paragraph.match(/^\d+\.\s+/)) {
-                return (
-                  <li key={index} className="text-gray-800 dark:text-gray-200 ml-4 mb-2 list-decimal">
-                  {paragraph.replace(/^\d+\.\s+/, '')}
-                </li>
-              );
-            }
-
-            // 處理粗體文字（**text** 或 __text__）
-            const boldText = paragraph.replace(
-              /\*\*(.*?)\*\*/g,
-              '<strong class="text-amber-700 dark:text-yellow-300 font-bold">$1</strong>'
-            ).replace(
-              /__(.*?)__/g,
-              '<strong class="text-amber-700 dark:text-yellow-300 font-bold">$1</strong>'
-            );
-
-            // 空行
-            if (paragraph.trim() === '') {
-              return <br key={index} />;
-            }
-
-            // 一般段落
-            return (
-              <p
-                key={index}
-                className="text-gray-800 dark:text-gray-200 mb-4 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: boldText }}
-              />
-            );
-          })}
-          </div>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({ children }) => <h2 className="text-2xl font-bold text-purple-700 dark:text-purple-300 mt-6 mb-4">{children}</h2>,
+              h2: ({ children }) => <h3 className="text-xl font-bold text-blue-700 dark:text-blue-300 mt-4 mb-3">{children}</h3>,
+              h3: ({ children }) => <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mt-3 mb-2">{children}</h4>,
+              p: ({ children }) => <p className="text-gray-800 dark:text-gray-200 mb-3 leading-relaxed">{children}</p>,
+              ul: ({ children }) => <ul className="list-disc ml-5 mb-3 space-y-1">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal ml-5 mb-3 space-y-1">{children}</ol>,
+              li: ({ children }) => <li className="text-gray-800 dark:text-gray-200">{children}</li>,
+              strong: ({ children }) => <strong className="text-amber-700 dark:text-yellow-300 font-bold">{children}</strong>,
+              em: ({ children }) => <em className="italic text-slate-700 dark:text-slate-300">{children}</em>,
+              code: ({ children, className }) => {
+                const isBlock = className?.includes('language-');
+                return isBlock
+                  ? <code className="block bg-gray-100 dark:bg-gray-800 text-rose-600 dark:text-rose-400 p-3 rounded text-sm overflow-x-auto my-2">{children}</code>
+                  : <code className="bg-gray-100 dark:bg-gray-800 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded text-sm">{children}</code>;
+              },
+              blockquote: ({ children }) => <blockquote className="border-l-4 border-purple-400 pl-4 italic text-gray-600 dark:text-gray-400 my-3">{children}</blockquote>,
+              table: ({ children }) => <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 my-3 text-sm">{children}</table>,
+              th: ({ children }) => <th className="border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 px-3 py-2 text-left font-semibold">{children}</th>,
+              td: ({ children }) => <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{children}</td>,
+            }}
+          >
+            {displayExplanation}
+          </ReactMarkdown>
         </div>
       )}
 
