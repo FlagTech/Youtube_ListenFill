@@ -9,7 +9,7 @@ from pathlib import Path
 
 class YouTubeService:
     """YouTube 影片下載服務類別"""
-    
+
     def __init__(self):
         # 使用絕對路徑（專案根目錄）
         base_dir = Path(__file__).resolve().parent.parent.parent
@@ -20,7 +20,7 @@ class YouTubeService:
         # 確保目錄存在
         self.video_dir.mkdir(parents=True, exist_ok=True)
         self.subtitle_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def get_video_info(self, url: str) -> Dict:
         """
         取得 YouTube 影片資訊
@@ -37,12 +37,13 @@ class YouTubeService:
             'sleep_interval': 1,
             'max_sleep_interval': 5,
             'retries': 3,
+            'extractor_args': {'youtube': {'player_client': ['android']}},
         }
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
-                
+
                 return {
                     'youtube_id': info.get('id'),
                     'title': info.get('title'),
@@ -53,7 +54,7 @@ class YouTubeService:
                 }
         except Exception as e:
             raise Exception(f"無法取得影片資訊: {str(e)}")
-    
+
     def download_video(self, url: str, video_id: str) -> Dict:
         """
         下載 YouTube 影片和英文字幕（分開下載以避免 429 錯誤）
@@ -80,6 +81,7 @@ class YouTubeService:
             'sleep_interval': 1,
             'max_sleep_interval': 5,
             'retries': 3,
+            'extractor_args': {'youtube': {'player_client': ['android']}},
         }
 
         has_manual_subs = False
@@ -128,23 +130,23 @@ class YouTubeService:
             print(f"[DEBUG] 影片路徑: {video_path}")
 
             video_opts = {
-                'format': 'best[height<=720]',
+                'format': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best[height<=720]/best',
+                'merge_output_format': 'mp4',
                 'outtmpl': str(video_path),
                 'quiet': False,
                 'no_warnings': True,
                 'sleep_interval': 1,
                 'max_sleep_interval': 5,
                 'retries': 3,
-                # 明確禁用字幕下載，避免重複請求
                 'writesubtitles': False,
                 'writeautomaticsub': False,
+                'extractor_args': {'youtube': {'player_client': ['android']}},
             }
 
             with yt_dlp.YoutubeDL(video_opts) as ydl:
                 ydl.download([url])
                 print(f"[DEBUG] 影片下載完成")
 
-            # VTT 自動字幕需要更長的等待時間，避免觸發 429 錯誤
             import time
             if has_manual_subs:
                 wait_time = 3
@@ -158,9 +160,8 @@ class YouTubeService:
             print(f"[DEBUG] 步驟 2/2: 下載字幕...")
             print(f"[DEBUG] 字幕路徑: {subtitle_path}")
 
-            # VTT 自動字幕使用更保守的設置，避免請求過於頻繁
             subtitle_opts = {
-                'skip_download': True,  # 不下載影片
+                'skip_download': True,
                 'writesubtitles': has_manual_subs,
                 'writeautomaticsub': not has_manual_subs,
                 'subtitleslangs': ['en'],
@@ -168,9 +169,10 @@ class YouTubeService:
                 'outtmpl': str(self.video_dir / video_id),
                 'quiet': False,
                 'no_warnings': True,
-                'sleep_interval': 3 if not has_manual_subs else 1,  # VTT 使用更長延遲
-                'max_sleep_interval': 10 if not has_manual_subs else 5,  # VTT 使用更長最大延遲
-                'retries': 2,  # 減少重試次數，避免過多請求
+                'sleep_interval': 3 if not has_manual_subs else 1,
+                'max_sleep_interval': 10 if not has_manual_subs else 5,
+                'retries': 2,
+                'extractor_args': {'youtube': {'player_client': ['android']}},
             }
 
             with yt_dlp.YoutubeDL(subtitle_opts) as ydl:
@@ -187,7 +189,6 @@ class YouTubeService:
                 shutil.move(str(subtitle_files[0]), str(subtitle_path))
                 print(f"[DEBUG] 字幕已移動到: {subtitle_path}")
             else:
-                # 檢查所有同格式字幕檔案
                 print(f"[DEBUG] 未找到字幕，檢查所有 .{subtitle_format} 檔案...")
                 all_subs = list(self.video_dir.glob(f"*.{subtitle_format}"))
                 print(f"[DEBUG] 所有 .{subtitle_format} 檔案: {all_subs}")
@@ -212,14 +213,14 @@ class YouTubeService:
             print(f"[ERROR] 下載錯誤:")
             print(error_detail)
             raise Exception(f"下載失敗: {str(e)}")
-    
+
     def extract_youtube_id(self, url: str) -> Optional[str]:
         """
         從 YouTube URL 提取影片 ID
-        
+
         Args:
             url: YouTube 影片網址
-            
+
         Returns:
             影片 ID 或 None
         """
@@ -229,6 +230,7 @@ class YouTubeService:
                 'sleep_interval': 1,
                 'max_sleep_interval': 5,
                 'retries': 3,
+                'extractor_args': {'youtube': {'player_client': ['android']}},
             }) as ydl:
                 info = ydl.extract_info(url, download=False)
                 return info.get('id')
@@ -238,4 +240,3 @@ class YouTubeService:
 
 # 建立全域實例
 youtube_service = YouTubeService()
-

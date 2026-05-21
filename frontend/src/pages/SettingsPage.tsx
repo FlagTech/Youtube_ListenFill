@@ -217,7 +217,7 @@ export default function SettingsPage() {
     <div className="min-h-screen">
       <NavBar />
       
-      <main className="px-4 md:px-6 pb-8">
+      <main className="px-4 md:px-6 pt-6 pb-8">
         <div className="max-w-4xl mx-auto">
           {/* 標題列 */}
           <div className="mb-8 flex items-center gap-4 animate-fade-in-up">
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <div className="font-bold text-gray-900 dark:text-white mb-1">OpenAI GPT</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">需付費，品質最佳</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">需付費</div>
                 </button>
 
                 {/* Gemini */}
@@ -322,6 +322,10 @@ export default function SettingsPage() {
                     onChange={(e) => setOpenaiModel(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
+                    <option value="gpt-5.5">GPT-5.5</option>
+                    <option value="gpt-5.5-instant">GPT-5.5 Instant</option>
+                    <option value="gpt-5.4-mini">GPT-5.4 Mini</option>
+                    <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
                     <option value="gpt-5.2">GPT-5.2</option>
                     <option value="gpt-5.1">GPT-5.1</option>
                     <option value="gpt-5">GPT-5</option>
@@ -361,9 +365,13 @@ export default function SettingsPage() {
                     onChange={(e) => setGeminiModel(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-3.5">Gemini 3.5</option>
+                    <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+                    <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+                    <option value="gemini-3.0-flash">Gemini 3.0 Flash</option>
                     <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
                     <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                     <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                   </select>
@@ -441,7 +449,7 @@ export default function SettingsPage() {
           <div className="mt-6 glass-card p-6 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">💡 使用說明</h3>
             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>• <strong>OpenAI GPT</strong>：需要付費 API Key，但提供最佳的解說品質</li>
+              <li>• <strong>OpenAI GPT</strong>：需要付費 API Key</li>
               <li>• <strong>Google Gemini</strong>：提供免費使用額度，適合一般使用</li>
               <li>• <strong>Ollama 本地</strong>：完全免費，但需要在電腦上安裝並運行 Ollama 服務</li>
               <li>• 儲存設定後，請點擊「測試連線」確認服務可正常使用</li>

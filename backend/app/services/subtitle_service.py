@@ -212,13 +212,15 @@ class SubtitleService:
         self,
         segments: List[Dict],
         on_progress: Optional[Callable[[int, int], None]] = None,
+        batch_size: int = 20,
     ) -> List[Dict]:
         """
-        翻譯字幕分段
+        翻譯字幕分段（批次模式，速度比逐句快數倍）
 
         Args:
             segments: 字幕分段列表
             on_progress: 進度回呼 on_progress(current, total)，每段完成後呼叫
+            batch_size: 每批翻譯的段落數（Google Translate 單次上限約 5000 字元）
 
         Returns:
             包含翻譯的字幕分段列表
@@ -226,25 +228,83 @@ class SubtitleService:
         total = len(segments)
         failed = 0
 
-        for i, segment in enumerate(segments):
-            try:
-                translated = self.translator.translate(segment['text_en'])
-                segment['text_zh'] = translated
-                time.sleep(0.1)
-            except Exception as e:
-                print(f"翻譯錯誤 (段落 {segment['index']}): {str(e)}")
-                segment['text_zh'] = segment['text_en']
-                failed += 1
-            finally:
-                segment['letter_template'] = self.generate_letter_template(segment['text_en'])
+        for batch_start in range(0, total, batch_size):
+            batch = segments[batch_start:batch_start + batch_size]
+            texts = [seg['text_en'] for seg in batch]
 
-            if on_progress:
-                on_progress(i + 1, total)
+            translations = self._translate_batch_with_retry(texts)
+
+            for j, (segment, translated) in enumerate(zip(batch, translations)):
+                segment['text_zh'] = translated
+                segment['letter_template'] = self.generate_letter_template(segment['text_en'])
+                if translated == segment['text_en']:
+                    failed += 1
+
+                if on_progress:
+                    on_progress(batch_start + j + 1, total)
+
+            # 批次之間稍作等待，避免觸發 rate limit
+            if batch_start + batch_size < total:
+                time.sleep(0.3)
 
         if failed > 0:
             print(f"[WARN] {failed}/{total} 段翻譯失敗，已以英文原文替代")
 
         return segments
+
+    def _translate_batch_with_retry(self, texts: List[str], max_retries: int = 3) -> List[str]:
+        """
+        批次翻譯，失敗時降級為逐句翻譯並重試
+
+        Args:
+            texts: 待翻譯文字列表
+            max_retries: 最大重試次數
+
+        Returns:
+            翻譯結果列表（失敗的保留英文原文）
+        """
+        # 先嘗試批次翻譯
+        for attempt in range(max_retries):
+            try:
+                results = self.translator.translate_batch(texts)
+                # translate_batch 有時回傳 None，過濾掉
+                if results and all(r is not None for r in results):
+                    return results
+            except Exception as e:
+                print(f"[WARN] 批次翻譯第 {attempt + 1} 次失敗: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+
+        # 批次翻譯失敗，降級為逐句翻譯
+        print("[INFO] 降級為逐句翻譯...")
+        results = []
+        for text in texts:
+            translated = self._translate_single_with_retry(text)
+            results.append(translated)
+            time.sleep(0.1)
+        return results
+
+    def _translate_single_with_retry(self, text: str, max_retries: int = 3) -> str:
+        """
+        單句翻譯，帶重試機制
+
+        Args:
+            text: 待翻譯文字
+            max_retries: 最大重試次數
+
+        Returns:
+            翻譯結果，失敗時回傳英文原文
+        """
+        for attempt in range(max_retries):
+            try:
+                result = self.translator.translate(text)
+                if result:
+                    return result
+            except Exception as e:
+                print(f"翻譯錯誤: {text[:50]}... ({e})")
+                if attempt < max_retries - 1:
+                    time.sleep(0.5 * (attempt + 1))
+        return text
     
     def generate_letter_template(self, text: str) -> str:
         """
