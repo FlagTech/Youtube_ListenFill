@@ -24,6 +24,22 @@ export default function FillBlanksInput() {
 
   const correctAnswers = useMemo(() => extractCorrectAnswers(elements), [elements]);
 
+  // 以空格為界將 elements 分組，每組代表一個單字（含附著的標點）
+  const wordGroups = useMemo(() => {
+    const groups: (typeof elements)[] = [];
+    let current: typeof elements = [];
+    for (const el of elements) {
+      if (el.type === 'space') {
+        if (current.length > 0) groups.push(current);
+        current = [];
+      } else {
+        current.push(el);
+      }
+    }
+    if (current.length > 0) groups.push(current);
+    return groups;
+  }, [elements]);
+
   const currentInputs = userInputs[currentSegmentIndex] || [];
 
   const answerCheck = useMemo(
@@ -100,68 +116,72 @@ export default function FillBlanksInput() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1 items-baseline p-6 bg-white rounded-lg shadow-md min-h-32 font-mono">
-        {elements.map((element, idx) => {
-          if (element.type === 'input') {
-            const inputIndex = element.index!;
-            return (
-              <input
-                key={`input-${idx}`}
-                ref={setInputRef(inputIndex)}
-                type="text"
-                maxLength={1}
-                value={currentInputs[inputIndex] || ''}
-                onChange={(e) => handleInputChange(inputIndex, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, inputIndex)}
-                className={getInputClassName(inputIndex)}
-                autoComplete="off"
-              />
-            );
-          } else if (element.type === 'space') {
-            return <span key={`space-${idx}`} className="inline-block w-4" />;
-          } else {
-            return (
-              <span key={`punct-${idx}`} className="inline-flex justify-center text-lg font-medium text-gray-700" style={{ width: '1.4ch' }}>
-                {element.char}
-              </span>
-            );
-          }
-        })}
-      </div>
-
-      {showAnswer && (
-        <div className="py-4 px-6 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 mb-2">正確答案：</p>
-          <div className="flex flex-wrap gap-1 items-baseline font-mono">
-            {elements.map((element, idx) => {
+      <div className="flex flex-wrap gap-x-2 gap-y-2 items-baseline p-6 bg-white rounded-lg shadow-md min-h-32 font-mono">
+        {wordGroups.map((group, groupIdx) => (
+          <span key={`word-${groupIdx}`} className="inline-flex items-baseline gap-0.5">
+            {group.map((element, elIdx) => {
               if (element.type === 'input') {
                 const inputIndex = element.index!;
-                const check = answerCheck[inputIndex];
                 return (
-                  <span
-                    key={`answer-${idx}`}
-                    className={`h-8 inline-flex items-center justify-center text-lg font-medium border-b-2 ${
-                      check.isEmpty
-                        ? 'border-gray-400 text-gray-600'
-                        : check.isCorrect
-                        ? 'border-green-500 text-green-700'
-                        : 'border-red-500 text-red-700'
-                    }`}
-                    style={{ width: '1.4ch' }}
-                  >
-                    {element.char}
-                  </span>
+                  <input
+                    key={`input-${groupIdx}-${elIdx}`}
+                    ref={setInputRef(inputIndex)}
+                    type="text"
+                    maxLength={1}
+                    value={currentInputs[inputIndex] || ''}
+                    onChange={(e) => handleInputChange(inputIndex, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, inputIndex)}
+                    className={getInputClassName(inputIndex)}
+                    autoComplete="off"
+                  />
                 );
-              } else if (element.type === 'space') {
-                return <span key={`answer-space-${idx}`} className="inline-block w-4" />;
               } else {
                 return (
-                  <span key={`answer-punct-${idx}`} className="inline-flex justify-center text-lg font-medium text-gray-700" style={{ width: '1.4ch' }}>
+                  <span key={`punct-${groupIdx}-${elIdx}`} className="inline-flex justify-center text-lg font-medium text-gray-700" style={{ width: '1.4ch' }}>
                     {element.char}
                   </span>
                 );
               }
             })}
+          </span>
+        ))}
+      </div>
+
+      {showAnswer && (
+        <div className="py-4 px-6 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600 mb-2">正確答案：</p>
+          <div className="flex flex-wrap gap-x-2 gap-y-2 items-baseline font-mono">
+            {wordGroups.map((group, groupIdx) => (
+              <span key={`answer-word-${groupIdx}`} className="inline-flex items-baseline gap-0.5">
+                {group.map((element, elIdx) => {
+                  if (element.type === 'input') {
+                    const inputIndex = element.index!;
+                    const check = answerCheck[inputIndex];
+                    return (
+                      <span
+                        key={`answer-${groupIdx}-${elIdx}`}
+                        className={`h-8 inline-flex items-center justify-center text-lg font-medium border-b-2 ${
+                          check.isEmpty
+                            ? 'border-gray-400 text-gray-600'
+                            : check.isCorrect
+                            ? 'border-green-500 text-green-700'
+                            : 'border-red-500 text-red-700'
+                        }`}
+                        style={{ width: '1.4ch' }}
+                      >
+                        {element.char}
+                      </span>
+                    );
+                  } else {
+                    return (
+                      <span key={`answer-punct-${groupIdx}-${elIdx}`} className="inline-flex justify-center text-lg font-medium text-gray-700" style={{ width: '1.4ch' }}>
+                        {element.char}
+                      </span>
+                    );
+                  }
+                })}
+              </span>
+            ))}
           </div>
         </div>
       )}

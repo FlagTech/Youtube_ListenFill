@@ -4,7 +4,7 @@
 import { Save, X } from 'lucide-react';
 import { useVideoStore } from '../store/useVideoStore';
 import { subtitleApi } from '../services/api';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -24,6 +24,37 @@ export default function AIExplanationCard() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedExplanation, setShowSavedExplanation] = useState(false);
   const currentSegment = segments[currentSegmentIndex];
+
+  // 追蹤待自動儲存的解說（使用 ref 以免受 store 重設影響）
+  const pendingSaveRef = useRef<{ segmentId: number; segmentIndex: number; explanation: string } | null>(null);
+
+  // 當產生新解說時，記錄至 ref
+  useEffect(() => {
+    if (aiExplanation && currentSegment) {
+      pendingSaveRef.current = {
+        segmentId: currentSegment.id,
+        segmentIndex: currentSegmentIndex,
+        explanation: aiExplanation,
+      };
+    }
+  }, [aiExplanation]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 切換字幕段時，若有未儲存的解說則自動儲存
+  useEffect(() => {
+    const pending = pendingSaveRef.current;
+    if (pending && pending.segmentIndex !== currentSegmentIndex) {
+      pendingSaveRef.current = null;
+      subtitleApi.updateSegment(pending.segmentId, { ai_insights: pending.explanation })
+        .then(() => {
+          setSegments(
+            segments.map(seg =>
+              seg.id === pending.segmentId ? { ...seg, ai_insights: pending.explanation } : seg
+            )
+          );
+        })
+        .catch(err => console.error('自動保存 AI 解說失敗:', err));
+    }
+  }, [currentSegmentIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 已保存的解說
   const savedExplanation = currentSegment?.ai_insights;
@@ -53,11 +84,10 @@ export default function AIExplanationCard() {
 
   const handleClose = () => {
     if (hasNewExplanation) {
-      // 關閉新生成的解說
+      pendingSaveRef.current = null; // 使用者明確關閉，不自動儲存
       toggleAIExplanation();
       setAIExplanation(null);
     } else {
-      // 隱藏已保存的解說
       setShowSavedExplanation(false);
     }
   };
@@ -65,6 +95,7 @@ export default function AIExplanationCard() {
   const handleSave = async () => {
     if (!currentSegment || !aiExplanation || isSaving) return;
 
+    pendingSaveRef.current = null; // 手動儲存，清除自動儲存標記
     setIsSaving(true);
     try {
       // 更新後端資料

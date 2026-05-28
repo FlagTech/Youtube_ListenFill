@@ -145,26 +145,32 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
         currentSegmentIndex: index,
         showAnswer: false,
         isPlaying: true, // 自動開始播放
+        aiExplanation: null,
+        showAIExplanation: false,
       });
     }
   },
-  
+
   nextSegment: () => {
     const { currentSegmentIndex, segments } = get();
     if (currentSegmentIndex < segments.length - 1) {
-      set({ 
+      set({
         currentSegmentIndex: currentSegmentIndex + 1,
         showAnswer: false,
+        aiExplanation: null,
+        showAIExplanation: false,
       });
     }
   },
-  
+
   prevSegment: () => {
     const { currentSegmentIndex } = get();
     if (currentSegmentIndex > 0) {
-      set({ 
+      set({
         currentSegmentIndex: currentSegmentIndex - 1,
         showAnswer: false,
+        aiExplanation: null,
+        showAIExplanation: false,
       });
     }
   },
