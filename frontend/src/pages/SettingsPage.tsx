@@ -41,7 +41,7 @@ export default function SettingsPage() {
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [openaiModel, setOpenaiModel] = useState('gpt-5-mini');
   const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [geminiModel, setGeminiModel] = useState('gemini-2.5-flash');
+  const [geminiModel, setGeminiModel] = useState('gemini-3.5-flash-lite');
   const [ollamaBaseUrl, setOllamaBaseUrl] = useState('http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState('llama3.1:8b');
 
@@ -90,7 +90,7 @@ export default function SettingsPage() {
         if (local) {
           setProvider((local.provider as AIProvider) || 'gemini');
           setOpenaiModel(local.openai_model || 'gpt-4o-mini');
-          setGeminiModel(local.gemini_model || 'gemini-1.5-flash');
+          setGeminiModel(local.gemini_model || 'gemini-3.5-flash-lite');
           setOllamaBaseUrl(local.ollama_base_url || 'http://localhost:11434');
           setOllamaModel(local.ollama_model || 'llama3.1:8b');
           if (local.openai_api_key) setOpenaiKeyMasked(maskKey(local.openai_api_key));
@@ -365,15 +365,11 @@ export default function SettingsPage() {
                     onChange={(e) => setGeminiModel(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="gemini-3.5">Gemini 3.5</option>
-                    <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
-                    <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
-                    <option value="gemini-3.0-flash">Gemini 3.0 Flash</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite（推薦）</option>
+                    <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+                    <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
+                    <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite</option>
+                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview（需付費）</option>
                   </select>
                 </div>
               </div>

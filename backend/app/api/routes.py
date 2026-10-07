@@ -12,7 +12,7 @@ import json
 import asyncio
 import queue
 
-from app.models.database import get_db, Video, SubtitleSegment, Folder, AISettings
+from app.models.database import get_db, Video, SubtitleSegment, Folder, AISettings, DEFAULT_GEMINI_MODEL, resolve_gemini_model
 from app.services.youtube_service import youtube_service
 from app.services.subtitle_service import subtitle_service
 from app.services.ai_service import get_ai_service
@@ -693,7 +693,7 @@ class AISettingsRequest(BaseModel):
     openai_api_key: Optional[str] = None
     openai_model: str = "gpt-5-mini"
     gemini_api_key: Optional[str] = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = DEFAULT_GEMINI_MODEL
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1:8b"
 
@@ -750,7 +750,7 @@ async def get_ai_settings(db: Session = Depends(get_db)):
             openai_api_key_masked=None,
             openai_model="gpt-5-mini",
             gemini_api_key_masked=None,
-            gemini_model="gemini-2.5-flash",
+            gemini_model=DEFAULT_GEMINI_MODEL,
             ollama_base_url="http://localhost:11434",
             ollama_model="llama3.1:8b"
         )
@@ -760,7 +760,7 @@ async def get_ai_settings(db: Session = Depends(get_db)):
         openai_api_key_masked=_mask_api_key(settings.openai_api_key),
         openai_model=settings.openai_model,
         gemini_api_key_masked=_mask_api_key(settings.gemini_api_key),
-        gemini_model=settings.gemini_model,
+        gemini_model=resolve_gemini_model(settings.gemini_model),
         ollama_base_url=settings.ollama_base_url,
         ollama_model=settings.ollama_model,
         updated_at=settings.updated_at

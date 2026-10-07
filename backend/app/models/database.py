@@ -10,6 +10,31 @@ from sqlalchemy.orm import relationship, sessionmaker
 
 Base = declarative_base()
 
+# Gemini 預設模型（文字解說）
+DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite"
+
+# 已停用或新帳號無法使用的 Gemini 模型
+RETIRED_GEMINI_MODELS = {
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.0-flash",
+    "gemini-3-flash-preview",
+    "gemini-3.1-pro",
+    "gemini-3.5",
+}
+
+
+def resolve_gemini_model(model: str = None) -> str:
+    """舊設定中的停用模型自動改用預設模型"""
+    if not model or model in RETIRED_GEMINI_MODELS:
+        return DEFAULT_GEMINI_MODEL
+    return model
+
 
 class Folder(Base):
     """分類資料夾表"""
@@ -70,7 +95,7 @@ class AISettings(Base):
     openai_api_key = Column(String, nullable=True)
     openai_model = Column(String, default="gpt-5-mini")
     gemini_api_key = Column(String, nullable=True)
-    gemini_model = Column(String, default="gemini-2.5-flash")
+    gemini_model = Column(String, default=DEFAULT_GEMINI_MODEL)
     ollama_base_url = Column(String, default="http://localhost:11434")
     ollama_model = Column(String, default="llama3.1:8b")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

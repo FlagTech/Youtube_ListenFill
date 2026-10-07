@@ -27,7 +27,7 @@ def migrate():
             default_settings = AISettings(
                 provider="gemini",
                 openai_model="gpt-4o-mini",
-                gemini_model="gemini-1.5-flash",
+                gemini_model="gemini-3.5-flash-lite",
                 ollama_base_url="http://localhost:11434",
                 ollama_model="llama3.1:8b"
             )

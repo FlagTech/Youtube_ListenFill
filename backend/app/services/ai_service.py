@@ -8,7 +8,7 @@ from google.genai import types as genai_types
 import requests
 from sqlalchemy.orm import Session
 
-from app.models.database import AISettings
+from app.models.database import AISettings, resolve_gemini_model
 from app.services.prompt_manager import PromptManager
 
 _prompt_manager = PromptManager()
@@ -88,7 +88,7 @@ class AIService:
         try:
             client = genai.Client(api_key=self.settings.gemini_api_key)
             response = client.models.generate_content(
-                model=self.settings.gemini_model,
+                model=resolve_gemini_model(self.settings.gemini_model),
                 contents=prompt,
                 config=genai_types.GenerateContentConfig(
                     temperature=0.7,
